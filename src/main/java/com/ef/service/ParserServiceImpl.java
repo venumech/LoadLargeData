@@ -144,8 +144,8 @@ File serverLogFile;
         String comments = tokens[4];
 
         //consider the data if the date is equal to either of startdate or end endDate.
-        //Or if the date is in between the startDate and EndDate
-        if ((date.isEqual(startDate) || date.isEqual(startDate))
+        //Or if the date is in between the startDate and EndDate        
+        if ((date.isEqual(startDate) || date.isEqual(endDate))
                 || (date.isAfter(startDate)
                 && date.isBefore(endDate))) {
             Record item = new Record();
