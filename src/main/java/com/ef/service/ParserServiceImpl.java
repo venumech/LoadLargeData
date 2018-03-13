@@ -90,7 +90,7 @@ File serverLogFile;
                     method = r.getMethod();
                     status = r.getStatus();
                     comments = r.getComments();
-                    String record = String.format("%s,%s,%s,%d,%s", getTimeStampString(timestamp), ipAddress, method, status, comments);
+                    String record = String.format("%s|%s|%s|%d|%s", getTimeStampString(timestamp), ipAddress, method, status, comments);
                     builder.append(record);
                     builder.append(LINE_SEPARATOR);
                     ips.add(ip);
