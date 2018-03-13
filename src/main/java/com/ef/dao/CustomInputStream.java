@@ -37,7 +37,7 @@ public class CustomInputStream extends InputStream {
         
         String[] csvLine;
         if(csvLineString!=null){
-            csvLine = csvLineString.split("\\,");
+            csvLine = csvLineString.split("\\|");
         }else{
             currentRecord=null;
             return;
