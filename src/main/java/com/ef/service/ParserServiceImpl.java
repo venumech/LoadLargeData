@@ -5,7 +5,6 @@
  */
 package com.ef.service;
 
-import com.ef.Parser;
 import com.ef.Record;
 import com.ef.dao.ServerLogDao;
 import static com.venu.develop.utils.DateUtils.formatDateValue;
@@ -30,8 +29,7 @@ import org.springframework.stereotype.Service;
  */
 @Service("ParserService")
 public class ParserServiceImpl implements ParserService{
-private Map<String, List<Record>> recordsMap = new HashMap<>();
-
+private Map<String, List<String>> recordsMap = new HashMap<>();
 
 //private LocalDateTime startDate;
 //private LocalDateTime endDate;
@@ -68,44 +66,32 @@ File serverLogFile;
     check if  there are enough  hits received by the server for any of the IPAddresses
      */
     private BufferedReader checkQualifiesforDBStore(LocalDateTime startDate,LocalDateTime endDate,Integer threshold) {
-        Map<String, List<Record>> recordsMap = getRecordsMap();
+        Map<String, List<String>> recordsMap = getRecordsMap();
         StringBuilder builder = new StringBuilder();
-        Set<String> ips = new TreeSet<String>();
-        String ipAddress = "";
-        String method = "";
-        Integer status = 0;
-        String comments = "";
 
         parse( startDate, endDate, threshold);
         
-        for (String ip : recordsMap.keySet()) {
-            // search  for ip value satisfying the threshold count
-            List<Record> records = recordsMap.get(ip);
-            // System.out.println("IP ADDRESS = " + ip + ";\t Filtered Data Count= " + recordsMap.get(ip).size());
+        logger.info(String.format("Below Ip addresses qualifies for this hit count:%d\n", threshold));
 
-            if (records.size() >= threshold) {
-                for (Record r : records) {
-                    LocalDateTime timestamp = r.getTimestamp();
-                    ipAddress = r.getIpAddress();
-                    method = r.getMethod();
-                    status = r.getStatus();
-                    comments = r.getComments();
-                    String record = String.format("%s|%s|%s|%d|%s", getTimeStampString(timestamp), ipAddress, method, status, comments);
-                    builder.append(record);
-                    builder.append(LINE_SEPARATOR);
-                    ips.add(ip);
-                }
+        for (String ip : getRecordsMap().keySet()) {
+            List<String> records = recordsMap.get(ip);
+            // System.out.println("IP ADDRESS = " + ip + ";\t Filtered Data Count= " + recordsMap.get(ip).size());
+            
+            // search  for ip value satisfying the threshold count
+            if (records.size() < threshold) {
+                continue;
+            }
+            
+            System.out.println("\t" + ip);
+            for  (String record : records){
+                builder.append(record);
+                builder.append(LINE_SEPARATOR);
+                //System.out.println("line = " + record );
             }
         }
-
-        logger.info(String.format("Below Ip addresses qualifies for this Minimum hit count:%d\n", threshold));
-        ips.forEach(ip -> {
-            System.out.println("\t" + ip);
-        });
-
         //convert StringBuilder to BufferedReader
-        Reader inputString = new StringReader(builder.toString());
-        BufferedReader bufferedReader = new BufferedReader(inputString);
+        Reader reader = new StringReader(builder.toString());
+        BufferedReader bufferedReader = new BufferedReader(reader);
         return bufferedReader;
     }
 
@@ -132,10 +118,10 @@ File serverLogFile;
         }
     }
 
-    private Map<String, List<Record>> fetchRecords(String line, LocalDateTime startDate,LocalDateTime endDate,Integer threshold) {
+    private Map<String, List<String>> fetchRecords(String line, LocalDateTime startDate,LocalDateTime endDate,Integer threshold) {
 
         String[] tokens = line.split("\\|");
-        Map<String, List<Record>> recordsMap = getRecordsMap();
+        Map<String, List<String>> recordsMap = getRecordsMap();
 
         LocalDateTime date = formatDateValue(tokens[0]);
         String ipAddress = tokens[1];
@@ -154,20 +140,21 @@ File serverLogFile;
             item.setMethod(method.replaceAll("\"", ""));
             item.setComments(comments.replaceAll("\"", ""));
             item.setStatus(status);
-
+            String record = String.format("%s,%s,%s,%d,%s", getTimeStampString(date), ipAddress, method, status, comments);
+            
             boolean addFl = false;
             for (String ip : recordsMap.keySet()) {
                 // search  for value
                 if (ip.equalsIgnoreCase(ipAddress)) {
-                    addFl = recordsMap.get(ip).add(item);
+                    addFl = recordsMap.get(ip).add(record);
                 }
 
                 //System.out.println("Key = " + ip + ", data size= " + recordsMap.get(ip).size());
             }
 
             if (!addFl) {
-                List<Record> l = new ArrayList<>();
-                l.add(item);
+                List<String> l = new ArrayList<>();
+                l.add(record);
                 recordsMap.put(ipAddress, l);
             }
         }
@@ -179,14 +166,14 @@ File serverLogFile;
     /**
      * @return the recordMap
      */
-    public Map<String, List<Record>> getRecordsMap() {
+    public Map<String, List<String>> getRecordsMap() {
         return recordsMap;
     }
 
     /**
      * @param recordMap the recordMap to set
      */
-    public void setRecordsMap(Map<String, List<Record>> recordMap) {
+    public void setRecordsMap(Map<String, List<String>> recordMap) {
         this.recordsMap = recordMap;
     }
 

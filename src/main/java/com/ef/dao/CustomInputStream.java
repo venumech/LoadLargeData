@@ -28,30 +28,14 @@ public class CustomInputStream extends InputStream {
     private void getNextRecord() throws IOException {
         String csvLineString = bufferedReader.readLine();
         StringBuilder builder = new StringBuilder();
-	//LocalDateTime timestamp;
-	String timestamp;
-	String ipAddress;
-	String method;
-	Integer status;
-	String comments;
-        
-        String[] csvLine;
-        if(csvLineString!=null){
-            csvLine = csvLineString.split("\\|");
-        }else{
-            currentRecord=null;
+
+        if (csvLineString == null) {
+            currentRecord = null;
             return;
         }
-        currentBufferIndex=0;
-         //timestamp = formatDateValue(csvLine[0]);
-         timestamp = csvLine[0];
-        ipAddress = csvLine[1];
-        status = Integer.valueOf(csvLine[3]);
-        method = csvLine[2];
-        comments = csvLine[4];
-        
-        builder.append(String.format("%s,%s,%s,%d,%s", timestamp, ipAddress,method,status,comments));
-        //builder.append(csvLineString);
+        currentBufferIndex = 0;
+
+        builder.append(csvLineString);
         builder.append("\n");
         currentRecord = builder.toString().getBytes();
         //System.out.printf("%s,%s,%s,%d,%s\n", timestamp, ipAddress,method,status,comments);
